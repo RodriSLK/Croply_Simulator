@@ -1096,30 +1096,70 @@ Estas tecnologías fueron evaluadas y descartadas. **No deben volver a proponers
 ## 16. Estructura de carpetas del proyecto
 
 ```
+Nota: esta estructura es un espejo de la definida en Croply_IoT_Simulator_Blueprint.md, sección 4. Esa es la fuente de verdad; esta sección solo la repite para que quede visible también en la Documentación Funcional. Ante cualquier discrepancia futura entre ambos documentos, prevalece el Blueprint.
+
 croply-iot-simulator/
-│
 ├── app/
-│   ├── main.py                  # FastAPI app — endpoints + sirve frontend HTML
-│   ├── scheduler.py             # APScheduler — ciclo cada 25 minutos
-│   ├── sincronizacion.py        # Lógica de sync con Croply (POST/PUT/DELETE + reintentos)
-│   ├── database.py              # Conexión a PostgreSQL y funciones CRUD
-│   ├── openmeteo.py             # Cliente HTTP para Open-Meteo
-│   ├── alertas.py               # Motor de reglas de alertas internas
-│   │
-│   ├── sensores/
-│   │   ├── temp_hume_ambiental.py  # Modelo DHT22 — temperatura, HR, VPD
-│   │   ├── radiacion_solar.py      # Piranómetro — W/m² y cálculo ETo
-│   │   ├── precipitacion.py        # Tipping bucket — mm y lluvia efectiva
-│   │   ├── humedad_suelo.py     # Balance hídrico VWC (tiene estado persistente)
-│   │   └── ph.py                # Deriva lenta + variación diurna
-│   │
-│   ├── eventos/
-│   │   └── procesador.py        # Aplica eventos manuales pendientes al ciclo
-│   │
+│   ├── init.py
+│   ├── main.py                      # FastAPI app — endpoints + sirve frontend HTML
+│   ├── config.py                    # Carga de variables de entorno
+│   ├── database.py                  # Engine, SessionLocal, get_db() (SQLAlchemy síncrono)
+│   ├── exceptions.py                # Excepciones de dominio + handler global
+│   ├── models/                      # Entidades SQLAlchemy (ORM)
+│   │   ├── parcela_simulada.py
+│   │   ├── controlador_simulado.py
+│   │   ├── sensor_simulado.py
+│   │   ├── lectura_sensor_simulada.py
+│   │   ├── alerta_simulada.py
+│   │   └── evento_manual_pendiente.py
+│   ├── schemas/                     # DTOs Pydantic (entrada/salida)
+│   │   ├── parcela.py
+│   │   ├── sensor.py
+│   │   ├── controlador.py
+│   │   ├── lectura.py
+│   │   ├── evento.py
+│   │   └── status.py
+│   ├── routers/                     # Endpoints HTTP
+│   │   ├── parcelas.py
+│   │   ├── estado.py
+│   │   ├── lecturas.py
+│   │   ├── eventos.py
+│   │   ├── controlador.py
+│   │   └── status.py
+│   ├── services/                    # Lógica de negocio (incluye sincronización con Croply)
+│   │   ├── parcela_service.py       # POST/PUT/DELETE 
+│   │   ├── scheduler_service.py
+│   │   ├── openmeteo_service.py
+│   │   ├── evento_service.py
+│   │   └── alerta_service.py
+│   ├── sensores/                    # Modelos matemáticos de simulación
+│   │   ├── base.py
+│   │   ├── temp_hume_ambiental.py
+│   │   ├── radiacion_solar.py
+│   │   ├── precipitacion.py
+│   │   ├── humedad_suelo.py
+│   │   └── ph.py
+│   ├── enums/
+│   │   └── enums.py
 │   └── static/
-│       └── index.html           # Frontend del simulador (HTML/CSS/JS puro)
-│
-├── docker-compose.yml           # Servicio simulador + PostgreSQL
+│       └── index.html
+├── migrations/                      # Alembic
+│   └── versions/
+├── tests/
+│   ├── conftest.py
+│   ├── test_parcelas.py
+│   ├── test_estado.py
+│   ├── test_scheduler.py
+│   └── test_sensores/
+│       ├── test_temp_hume.py
+│       ├── test_radiacion.py
+│       ├── test_precipitacion.py
+│       ├── test_humedad_suelo.py
+│       └── test_ph.py
+├── .env
+├── .env.example
+├── alembic.ini
+├── docker-compose.yml
 ├── Dockerfile
 └── requirements.txt
 ```
@@ -1170,17 +1210,7 @@ El scheduler de Croply que consume `GET /parcelas/{id}/estado` cada 25 minutos e
 
 ### Orden de implementación recomendado
 
-1. `database.py` — conexión y creación de tablas en PostgreSQL.
-2. `openmeteo.py` — cliente HTTP que dado lat/lon devuelve las variables climáticas actuales.
-3. Módulos de sensores en orden: `temp_hume_ambiental.py` → `radiacion_solar.py` → `precipitacion.py` → `humedad_suelo.py` → `ph.py`.
-4. `scheduler.py` — ciclo de 25 minutos que orquesta los pasos anteriores para cada parcela activa.
-5. `sincronizacion.py` — lógica de recepción y actualización de configuración desde Croply (POST, PUT, DELETE con reintentos).
-6. `main.py` — FastAPI con todos los endpoints definidos.
-7. `eventos/procesador.py` — motor de eventos manuales integrado al scheduler.
-8. `alertas.py` — motor de reglas internas.
-9. `static/index.html` — frontend del simulador.
-10. `Dockerfile` y `docker-compose.yml` — contenedorización y verificación local.
-11. Despliegue en Railway y verificación de funcionamiento 24/7.
+Ver orden de implementación oficial en Croply_IoT_Simulator_Blueprint.md, sección 22, y el detalle fase por fase en Croply_IoT_Simulator_Plan_Implementacion.md
 
 ---
 
