@@ -5,12 +5,23 @@ from app.config import setup_logging
 from app.exceptions import ParcelaNoEncontradaError, ParcelaYaExisteError
 from app.routers.estado import router as estado_router
 from app.routers.parcelas import router as parcelas_router
+from app.services.scheduler_service import detener_scheduler, iniciar_scheduler
 
 setup_logging()
 
 app = FastAPI()
 app.include_router(parcelas_router)
 app.include_router(estado_router)
+
+
+@app.on_event("startup")
+def start_scheduler() -> None:
+    iniciar_scheduler()
+
+
+@app.on_event("shutdown")
+def stop_scheduler() -> None:
+    detener_scheduler()
 
 
 @app.get("/")
