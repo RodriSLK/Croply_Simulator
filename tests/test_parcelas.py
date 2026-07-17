@@ -1,11 +1,12 @@
 from __future__ import annotations
 
 import pytest
+from fastapi.testclient import TestClient
 from sqlalchemy import create_engine, text
 from sqlalchemy.orm import sessionmaker
 
-from app.database import Base
 from app.exceptions import ParcelaNoEncontradaError, ParcelaYaExisteError
+from app.main import app
 from app.models.alerta_simulada import AlertaSimulada
 from app.models.controlador_simulado import ControladorSimulado
 from app.models.evento_manual_pendiente import EventoManualPendiente
@@ -143,3 +144,182 @@ def test_eliminar_parcela_inexistente_lanza_error() -> None:
 			eliminar_parcela(db, 1)
 	finally:
 		db.close()
+
+
+def test_post_parcela_integration_crea_recursos() -> None:
+	client = TestClient(app)
+
+	response = client.post(
+		"/parcelas",
+		json={
+			"parcela": {
+				"id": 1,
+				"nombre": "Parcela Norte",
+				"latitud": -32.89,
+				"longitud": -68.84,
+				"controlador": {
+					"id": 3,
+					"ip": "192.168.0.10",
+					"estado": "TRANSMITIENDO",
+					"sensores": [
+						{"id": 10, "tipo": "TEMP_HUME_AMBIENTAL"},
+						{"id": 11, "tipo": "HUMEDAD_SUELO"},
+						{"id": 12, "tipo": "RADIACION_SOLAR"},
+						{"id": 13, "tipo": "PRECIPITACION"},
+						{"id": 14, "tipo": "PH"},
+					],
+				},
+			}
+		},
+	)
+
+	assert response.status_code == 201
+
+
+def test_post_parcela_duplicada_integration_devuelve_409() -> None:
+	client = TestClient(app)
+	payload = {
+		"parcela": {
+			"id": 1,
+			"nombre": "Parcela Norte",
+			"latitud": -32.89,
+			"longitud": -68.84,
+			"controlador": {
+				"id": 3,
+				"ip": "192.168.0.10",
+				"estado": "TRANSMITIENDO",
+				"sensores": [
+					{"id": 10, "tipo": "TEMP_HUME_AMBIENTAL"},
+					{"id": 11, "tipo": "HUMEDAD_SUELO"},
+					{"id": 12, "tipo": "RADIACION_SOLAR"},
+					{"id": 13, "tipo": "PRECIPITACION"},
+					{"id": 14, "tipo": "PH"},
+				],
+			},
+		}
+	}
+
+	assert client.post("/parcelas", json=payload).status_code == 201
+	assert client.post("/parcelas", json=payload).status_code == 409
+
+
+def test_put_parcela_reemplaza_configuracion() -> None:
+	client = TestClient(app)
+	payload = {
+		"parcela": {
+			"id": 1,
+			"nombre": "Parcela Norte",
+			"latitud": -32.89,
+			"longitud": -68.84,
+			"controlador": {
+				"id": 3,
+				"ip": "192.168.0.10",
+				"estado": "TRANSMITIENDO",
+				"sensores": [
+					{"id": 10, "tipo": "TEMP_HUME_AMBIENTAL"},
+					{"id": 11, "tipo": "HUMEDAD_SUELO"},
+					{"id": 12, "tipo": "RADIACION_SOLAR"},
+					{"id": 13, "tipo": "PRECIPITACION"},
+					{"id": 14, "tipo": "PH"},
+				],
+			},
+		}
+	}
+	replacement = {
+		"parcela": {
+			"id": 1,
+			"nombre": "Parcela Norte Actualizada",
+			"latitud": -32.9,
+			"longitud": -68.85,
+			"controlador": {
+				"id": 4,
+				"ip": "192.168.0.11",
+				"estado": "TRANSMITIENDO",
+				"sensores": [
+					{"id": 10, "tipo": "TEMP_HUME_AMBIENTAL"},
+					{"id": 11, "tipo": "HUMEDAD_SUELO"},
+					{"id": 12, "tipo": "RADIACION_SOLAR"},
+					{"id": 13, "tipo": "PRECIPITACION"},
+				],
+			},
+		}
+	}
+
+	assert client.post("/parcelas", json=payload).status_code == 201
+	assert client.put("/parcelas/1", json=replacement).status_code == 200
+
+
+def test_put_parcela_inexistente_devuelve_404() -> None:
+	client = TestClient(app)
+	assert client.put(
+		"/parcelas/1",
+		json={
+			"parcela": {
+				"id": 1,
+				"nombre": "Parcela Norte",
+				"latitud": -32.89,
+				"longitud": -68.84,
+				"controlador": {
+					"id": 3,
+					"ip": "192.168.0.10",
+					"estado": "TRANSMITIENDO",
+					"sensores": [{"id": 10, "tipo": "TEMP_HUME_AMBIENTAL"}],
+				},
+			}
+		},
+	).status_code == 404
+
+
+def test_delete_parcela_integration_devuelve_200() -> None:
+	client = TestClient(app)
+	payload = {
+		"parcela": {
+			"id": 1,
+			"nombre": "Parcela Norte",
+			"latitud": -32.89,
+			"longitud": -68.84,
+			"controlador": {
+				"id": 3,
+				"ip": "192.168.0.10",
+				"estado": "TRANSMITIENDO",
+				"sensores": [
+					{"id": 10, "tipo": "TEMP_HUME_AMBIENTAL"},
+					{"id": 11, "tipo": "HUMEDAD_SUELO"},
+					{"id": 12, "tipo": "RADIACION_SOLAR"},
+					{"id": 13, "tipo": "PRECIPITACION"},
+					{"id": 14, "tipo": "PH"},
+				],
+			},
+		}
+	}
+
+	assert client.post("/parcelas", json=payload).status_code == 201
+	assert client.delete("/parcelas/1").status_code == 200
+
+
+def test_delete_parcela_inexistente_devuelve_404() -> None:
+	client = TestClient(app)
+	assert client.delete("/parcelas/1").status_code == 404
+
+
+def test_post_parcela_invalida_devuelve_422() -> None:
+	client = TestClient(app)
+	response = client.post(
+		"/parcelas",
+		json={
+			"parcela": {
+				"id": 1,
+				"nombre": "Parcela Norte",
+				"latitud": -32.89,
+				"longitud": -68.84,
+				"controlador": {
+					"id": 3,
+					"ip": "192.168.0.10",
+					"estado": "TRANSMITIENDO",
+					"sensores": [{"id": 10, "tipo": "HUMEDAD"}],
+				},
+			}
+		},
+	)
+
+	assert response.status_code == 422
