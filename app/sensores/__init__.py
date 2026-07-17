@@ -1,1 +1,5 @@
-# Paquete de modelos de simulacion por sensor.
+from app.sensores.humedad_suelo import calcular_valor as calcular_humedad_suelo
+from app.sensores.ph import calcular_valor as calcular_ph
+from app.sensores.precipitacion import calcular_valor as calcular_precipitacion
+from app.sensores.radiacion_solar import calcular_valor as calcular_radiacion_solar
+from app.sensores.temp_hume_ambiental import calcular_valor as calcular_temp_hume_ambiental
