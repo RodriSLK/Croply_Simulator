@@ -3,8 +3,12 @@ from fastapi.responses import JSONResponse
 
 from app.config import setup_logging
 from app.exceptions import ParcelaNoEncontradaError, ParcelaYaExisteError
+from app.routers.controlador import router as controlador_router
 from app.routers.estado import router as estado_router
+from app.routers.eventos import router as eventos_router
+from app.routers.lecturas import router as lecturas_router
 from app.routers.parcelas import router as parcelas_router
+from app.routers.status import router as status_router
 from app.services.scheduler_service import detener_scheduler, iniciar_scheduler
 
 setup_logging()
@@ -12,6 +16,10 @@ setup_logging()
 app = FastAPI()
 app.include_router(parcelas_router)
 app.include_router(estado_router)
+app.include_router(lecturas_router)
+app.include_router(eventos_router)
+app.include_router(controlador_router)
+app.include_router(status_router)
 
 
 @app.on_event("startup")
