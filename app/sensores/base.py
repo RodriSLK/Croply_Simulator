@@ -1,0 +1,1 @@
+# Interfaz base para sensores simulados.

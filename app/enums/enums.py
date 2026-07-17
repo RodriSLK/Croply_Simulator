@@ -1,0 +1,1 @@
+# Definicion de enums cerrados del sistema.

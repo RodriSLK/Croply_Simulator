@@ -1,0 +1,1 @@
+# Configuracion de persistencia SQLAlchemy del simulador.

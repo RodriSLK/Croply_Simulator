@@ -1,0 +1,1 @@
+# Pruebas de temperatura y humedad ambiental.
