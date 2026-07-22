@@ -1,6 +1,5 @@
 from fastapi import FastAPI, Request, status
-from fastapi.responses import FileResponse, JSONResponse
-from fastapi.staticfiles import StaticFiles
+from fastapi.responses import JSONResponse
 
 from app.config import setup_logging
 from app.exceptions import ParcelaNoEncontradaError, ParcelaYaExisteError
@@ -15,7 +14,6 @@ from app.services.scheduler_service import detener_scheduler, iniciar_scheduler
 setup_logging()
 
 app = FastAPI()
-app.mount("/static", StaticFiles(directory="app/static"), name="static")
 app.include_router(parcelas_router)
 app.include_router(estado_router)
 app.include_router(lecturas_router)
@@ -35,8 +33,8 @@ def stop_scheduler() -> None:
 
 
 @app.get("/")
-def read_root() -> FileResponse:
-    return FileResponse("app/static/index.html")
+def read_root() -> dict[str, str]:
+    return {"status": "ok"}
 
 
 @app.exception_handler(ParcelaNoEncontradaError)

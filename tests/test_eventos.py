@@ -5,7 +5,6 @@ from datetime import datetime, timezone, timedelta
 from sqlalchemy import create_engine, text
 from sqlalchemy.orm import sessionmaker
 
-from app.config import settings
 from app.models.evento_manual_pendiente import EventoManualPendiente
 from app.schemas.evento import EventoEntrada
 from app.services.evento_service import (
@@ -15,7 +14,7 @@ from app.services.evento_service import (
 )
 
 
-ENGINE = create_engine(settings.DATABASE_URL)
+ENGINE = create_engine("postgresql+psycopg://usuario:password@localhost:5432/croply_simulator")
 SessionLocal = sessionmaker(bind=ENGINE, autocommit=False, autoflush=False)
 
 
