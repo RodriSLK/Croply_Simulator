@@ -6,6 +6,7 @@ import pytest
 from sqlalchemy import create_engine, text
 from sqlalchemy.orm import sessionmaker
 
+from app.config import settings
 from app.enums.enums import TipoAlerta, TipoEvento, TipoSensorEnum
 from app.exceptions import OpenMeteoError
 from app.models.alerta_simulada import AlertaSimulada
@@ -20,7 +21,7 @@ from app.services.evento_service import crear_evento_pendiente
 from app.services.scheduler_service import ejecutar_ciclo_simulacion, obtener_estado_scheduler
 
 
-ENGINE = create_engine("postgresql+psycopg://usuario:password@localhost:5432/croply_simulator")
+ENGINE = create_engine(settings.DATABASE_URL)
 SessionLocal = sessionmaker(bind=ENGINE, autocommit=False, autoflush=False)
 
 

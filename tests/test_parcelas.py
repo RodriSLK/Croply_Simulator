@@ -5,6 +5,7 @@ from fastapi.testclient import TestClient
 from sqlalchemy import create_engine, text
 from sqlalchemy.orm import sessionmaker
 
+from app.config import settings
 from app.exceptions import ParcelaNoEncontradaError, ParcelaYaExisteError
 from app.main import app
 from app.models.alerta_simulada import AlertaSimulada
@@ -17,7 +18,7 @@ from app.schemas.parcela import ParcelaRequest
 from app.services.parcela_service import crear_parcela, eliminar_parcela, reemplazar_configuracion
 
 
-ENGINE = create_engine("postgresql+psycopg://usuario:password@localhost:5432/croply_simulator")
+ENGINE = create_engine(settings.DATABASE_URL)
 SessionLocal = sessionmaker(bind=ENGINE, autocommit=False, autoflush=False)
 
 

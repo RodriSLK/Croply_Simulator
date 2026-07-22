@@ -3,13 +3,14 @@ from __future__ import annotations
 from sqlalchemy import create_engine, text
 from sqlalchemy.orm import sessionmaker
 
+from app.config import settings
 from app.enums.enums import TipoAlerta
 from app.models.alerta_simulada import AlertaSimulada
 from app.models.parcela_simulada import ParcelaSimulada
 from app.services.alerta_service import evaluar_alertas_parcela, reiniciar_estado_alertas
 
 
-ENGINE = create_engine("postgresql+psycopg://usuario:password@localhost:5432/croply_simulator")
+ENGINE = create_engine(settings.DATABASE_URL)
 SessionLocal = sessionmaker(bind=ENGINE, autocommit=False, autoflush=False)
 
 
